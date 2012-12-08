@@ -1,0 +1,84 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <!-- The version of the pom.xml format that this is written in -->
+	<modelVersion>4.0.0</modelVersion>
+	
+    <!--
+    Properties are variables that can be referenced throughout the pom.xml file.
+    When the pom.xml file has repeated elements, it's best to put them as properties.
+    -->
+	<properties>
+		<maven-compiler-plugin.version>2.0.2</maven-compiler-plugin.version>
+		<maven-bundle-plugin.version>2.3.4</maven-bundle-plugin.version>
+		<osgi.api.version>4.2.0</osgi.api.version>
+	</properties>
+
+    <!--
+    These are the key elements of a pom.xml file. All
+    pom.xml files must have a "groupId", "artifactId", and "version".
+    These three things uniquely identify a project in Maven.
+
+    A "groupId" is the hierarchical name of the organization
+    that is making this project.
+
+    An "artifactId" is the name of the project.
+    -->
+	<groupId>com.example</groupId>
+	<artifactId>HelloWorld</artifactId>
+	<version>1.0</version>
+
+    <!--
+    "packaging" tells Maven what sort of thing you want to build.
+    If we were building a plain, old jar, we'd put in "jar" here.
+    However, we're building an OSGi bundle jar, so we've put
+    "jar" here.
+    -->
+	<packaging>bundle</packaging>
+
+	<build>
+		<plugins>
+			<plugin>
+			    <groupId>org.apache.maven.plugins</groupId>
+			    <artifactId>maven-compiler-plugin</artifactId>
+			    <version>${maven-compiler-plugin.version}</version>
+			    <configuration>
+			        <source>1.6</source>
+			        <target>1.6</target>
+			    </configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>${maven-bundle-plugin.version}</version>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+                        <Bundle-SymbolicName>com.example.helloworld</Bundle-SymbolicName>
+						<Bundle-Version>${project.version}</Bundle-Version>
+						<Private-Package>com.example.helloworld.*</Private-Package>
+						<Bundle-Activator>com.example.helloworld.internal.Activator</Bundle-Activator>
+					</instructions>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+    <!--
+    Our app depends on other OSGi bundle jars. We list all the jars
+    we depend on here. Just like our own Maven project, these
+    dependencies are uniquely identified by groupId, artifactId,
+    and version. Dependencies do not necessarily have to be
+    OSGi bundles. They can be third-party libraries, for example.
+    -->
+  	<dependencies>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.6.6</version>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.core</artifactId>
+			<version>${osgi.api.version}</version>
+		</dependency>
+  	</dependencies>
+</project>

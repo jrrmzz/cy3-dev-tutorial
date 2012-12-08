@@ -1,0 +1,104 @@
+<html>
+<head>
+<title>Cytoscape 3 Developer Tutorial Cheat Sheet</title>
+<style>
+pre {
+    border: 2px solid #d0d0d0;
+    margin-top: 0;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+</style>
+</head>
+<body>
+<h1>Cytoscape 3 Developer Tutorial Cheat Sheet</h1>
+<h2>Maven</h2>
+<h3>If you have a working internet connection:</h3>
+<ul>
+
+<li>General usage
+<pre>mvn <b>&#0171;goal-1&#0187;</b> <em>[ <b>&#0171;goal-2&#0187;</b> ... ]</em> </pre>
+</li>
+
+<li>Clean your project directory
+<pre>mvn clean</pre>
+</li>
+
+<li>Build your project
+<pre>mvn install</pre>
+</li>
+
+<li>Clean, then build your project
+<pre>mvn clean install</pre>
+</li>
+
+</ul>
+
+<h3>If you are working offline:</h3>
+<ul>
+
+<li>General usage
+<pre>mvn -o <b>&#0171;goal-1&#0187;</b> <em>[ <b>&#0171;goal-2&#0187;</b> ... ]</em></pre>
+</li>
+
+<li>Using a custom local repository (default is <code>~/.m2</code> on Mac/Linux, or <code>%USERPROFILE%\.m2</code> on Windows)
+<h3>Mac/Linux</h3>
+<pre>mvn -o -Dmaven.repo.local=/path/to/repository <b>&#0171;goal-1&#0187;</b> <em>[ <b>&#0171;goal-2&#0187;</b> ... ]</em></pre>
+<h3>Windows</h3>
+<pre>mvn -o -Dmaven.repo.local=path\to\repository <b>&#0171;goal-1&#0187;</b> <em>[ <b>&#0171;goal-2&#0187;</b> ... ]</em></pre>
+</li>
+
+<li>Build your project
+<pre>mvn install</pre>
+</li>
+
+<li>Clean, then build your project
+<pre>mvn clean install</pre>
+</li>
+
+</ul>
+
+<h2>Cytoscape</h2>
+<ul>
+
+<li>Launch Cytoscape
+<h3>Mac/Linux</h3>
+<pre>./cytoscape.sh</pre>
+<h3>Windows</h3>
+<pre>cytoscape.bat</pre>
+</li>
+
+<li>Launch Cytoscape with remote debugging enabled
+<h3>Mac/Linux</h3>
+<pre>./cytoscape.sh debug</pre>
+<h3>Windows</h3>
+<pre>cytoscape.bat debug</pre>
+</li>
+
+</ul>
+
+<h2>Cytoscape OSGi Shell</h2>
+<ul>
+
+<li>Install a bundle from Maven
+<pre>install mvn:<b>&#0171;group-id&#0187;</b>/<b>&#0171;artifact-id&#0187;</b></pre>
+e.g.:
+<pre>install mvn:<b>com.example</b>/<b>HelloWorld</b></pre>
+</li>
+
+<li>Start a bundle
+<pre>start <b>&#0171;bundle-id&#0187;</b></pre>
+e.g.:
+<pre>start <b>169</b></pre>
+</li>
+
+<li>Reload (and restart) a running bundle
+<pre>update <b>&#0171;bundle-id&#0187;</b></pre>
+e.g.:
+<pre>update <b>169</b></pre>
+</li>
+
+</ul>
+
+</body>
+</html>
