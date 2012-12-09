@@ -24,8 +24,8 @@
     An "artifactId" is the name of the project.
     -->
 	<groupId>com.example</groupId>
-	<artifactId>HelloWorldService</artifactId>
-	<version>1.0</version>
+	<artifactId>ZigZag</artifactId>
+	<version>2.0</version>
 
     <!--
     "packaging" tells Maven what sort of thing you want to build.
@@ -53,10 +53,10 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-                        <Bundle-SymbolicName>com.example.HelloWorldService</Bundle-SymbolicName>
+                        <Bundle-SymbolicName>com.example.ZigZag</Bundle-SymbolicName>
 						<Bundle-Version>${project.version}</Bundle-Version>
-						<Private-Package>com.example.helloworldservice.internal.*</Private-Package>
-						<Bundle-Activator>com.example.helloworldservice.internal.CyActivator</Bundle-Activator>
+						<Private-Package>com.example.zigzag.internal.*</Private-Package>
+						<Bundle-Activator>com.example.zigzag.internal.CyActivator</Bundle-Activator>
 					</instructions>
 				</configuration>
 			</plugin>
@@ -102,12 +102,27 @@
   	<dependencies>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
-			<artifactId>service-api</artifactId>
+			<artifactId>work-api</artifactId>
 			<version>${cytoscape.api.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
-			<artifactId>work-api</artifactId>
+			<artifactId>model-api</artifactId>
+			<version>${cytoscape.api.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.cytoscape</groupId>
+			<artifactId>presentation-api</artifactId>
+			<version>${cytoscape.api.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.cytoscape</groupId>
+			<artifactId>core-task-api</artifactId>
+			<version>${cytoscape.api.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.cytoscape</groupId>
+			<artifactId>service-api</artifactId>
 			<version>${cytoscape.api.version}</version>
 		</dependency>
 		

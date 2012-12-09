@@ -95,6 +95,7 @@ class FindPathsNodeViewTaskFactory implements NodeViewTaskFactory {
 
 	private static void setVisualPropertiesForPaths(
 			final CyNetworkView networkView, final Set<CyEdge> edges) {
+		
 		for (final CyEdge edge : edges) {
 			View<CyEdge> edgeView = networkView.getEdgeView(edge);
 			edgeView.setLockedValue(BasicVisualLexicon.EDGE_UNSELECTED_PAINT,
