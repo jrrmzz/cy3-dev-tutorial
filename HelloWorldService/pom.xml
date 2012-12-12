@@ -4,7 +4,7 @@
 	
     <!--
     Properties are variables that can be referenced throughout the pom.xml file.
-    When the pom.xml file has repeated elements, it's best to put them as properties.
+    When the pom.xml file has repeated elements, it's best to use them as properties.
     -->
 	<properties>
 		<cytoscape.api.version>3.0.0</cytoscape.api.version>
@@ -29,23 +29,44 @@
 
     <!--
     "packaging" tells Maven what sort of thing you want to build.
-    If we were building a plain, old jar, we'd put in "jar" here.
-    However, we're building an OSGi bundle jar, so we've put
-    "jar" here.
+    If we were building a plain, old JAR, we'd put in "jar" here.
+    However, we're building an OSGi bundle JAR, so we've put
+    "bundle" here.
     -->
 	<packaging>bundle</packaging>
 
+	<!--
+	This section tells Maven how the build is configured.  Maven
+	has numerous plugins that control very specific phases of the
+	build. 
+	-->
 	<build>
 		<plugins>
+	    	<!--
+	    	The maven-compiler-plugin configures the Java
+	    	compiler Maven uses to build the project.
+	    	-->
 			<plugin>
 			    <groupId>org.apache.maven.plugins</groupId>
 			    <artifactId>maven-compiler-plugin</artifactId>
 			    <version>${maven-compiler-plugin.version}</version>
 			    <configuration>
+			    	<!--
+			    	These options indicate the source code is Java
+			    	1.6-compliant and the resulting class files
+			    	should be Java 1.6-compatible.
+			    	-->
 			        <source>1.6</source>
 			        <target>1.6</target>
 			    </configuration>
 			</plugin>
+			
+			<!--
+			The maven-bundle-plugin creates the metadata
+			that's necessary for an OSGi bundle.  You can
+			customize the OSGi options in the "instructions"
+			section below.
+			-->
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
@@ -55,7 +76,13 @@
 					<instructions>
                         <Bundle-SymbolicName>com.example.HelloWorldService</Bundle-SymbolicName>
 						<Bundle-Version>${project.version}</Bundle-Version>
+						
+						<!--
+						This tells the bundle plugin which packages should not
+						be exported.
+						-->
 						<Private-Package>com.example.helloworldservice.internal.*</Private-Package>
+						
 						<Bundle-Activator>com.example.helloworldservice.internal.CyActivator</Bundle-Activator>
 					</instructions>
 				</configuration>
@@ -64,7 +91,7 @@
 	</build>
 
     <!--
-    These are repositories Maven uses to download Cytoscape API jars we
+    These are repositories Maven uses to download Cytoscape API JARs we
     use in our app.
     -->
 	<repositories>
@@ -93,11 +120,12 @@
 	</repositories>
     
     <!--
-    Our app depends on other OSGi bundle jars. We list all the jars
+    Our app depends on other OSGi bundle JARs. We list all the JARs
     we depend on here. Just like our own Maven project, these
     dependencies are uniquely identified by groupId, artifactId,
     and version. Dependencies do not necessarily have to be
-    OSGi bundles. They can be third-party libraries, for example.
+    OSGi bundles. They can be regular JAR files, in which case they must
+    be inlined or embedded into this bundle.
     -->
   	<dependencies>
 		<dependency>
@@ -111,11 +139,14 @@
 			<version>${cytoscape.api.version}</version>
 		</dependency>
 		
+		<!-- Logging -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>1.6.6</version>
 		</dependency>
+		
+		<!-- OSGi core API -->
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.core</artifactId>

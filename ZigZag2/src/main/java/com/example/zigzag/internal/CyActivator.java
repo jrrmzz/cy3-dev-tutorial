@@ -24,19 +24,18 @@ import static org.cytoscape.work.ServiceProperties.*;
  * import a service by asking OSGi for an implementation. The implementation is
  * provided by some other bundle.
  * 
- * When OSGi first loads your bundle, it will invoke {@CyActivator
- * 
- * 
- * 
- * 
- * }'s {@code start} method. So, the {@code start} method is where
- * you put in all your code that sets up your app. This is where you import and
- * export services.
+ * When OSGi starts your bundle, it will invoke {@CyActivator}'s
+ * {@code start} method. So, the {@code start} method is where you put in all
+ * your code that sets up your app. This is where you import and export
+ * services.
  * 
  * Your bundle's {@code Bundle-Activator} manifest entry has a fully-qualified
- * path to this class. You don't really have to write a class that extends
+ * path to this class. It's not necessary to inherit from
  * {@code AbstractCyActivator}. However, we provide this class as a convenience
  * to make it easier to work with OSGi.
+ * 
+ * Note: AbstractCyActivator already provides its own {@code stop} method, which
+ * {@code unget}s any services we fetch using getService().
  */
 public class CyActivator extends AbstractCyActivator {
 	/**
@@ -47,40 +46,54 @@ public class CyActivator extends AbstractCyActivator {
 	 */
 	@Override
 	public void start(BundleContext context) {
+		registerAboutTaskFactory(context);
+		registerFindPathsTaskFactory(context);
+	}
+
+	private void registerAboutTaskFactory(BundleContext context) {
+		// Configure the service properties first.
+		final Properties properties = new Properties();
+		properties.put(TITLE, "About Zig Zag 2");
+		properties.put(PREFERRED_MENU, APPS_MENU);
+
+		// Create the service implementation.
 		Version version = context.getBundle().getVersion();
+		TaskFactory taskFactory = new AboutTaskFactory(version);
 
-		/*
-		 * Here, we'll export a TaskFactory service. When exporting a service,
-		 * you can include a Properties object, which is just a String-to-String
-		 * map with additional information about the service you're exporting.
-		 * If given the right set of properties, Cytoscape creates a menu item
-		 * for the TaskFactory we're exporting. The Properties object specifies
-		 * the names of the menu and the menu item for our TaskFactory.
-		 * 
-		 * This TaskFactory presents a "About" dialog for our app. It puts it in
-		 * the "Apps" menu.
-		 */
-		final Properties aboutProps = new Properties();
-		aboutProps.put(TITLE, "About Zig Zag 2");
-		aboutProps.put(PREFERRED_MENU, APPS_MENU);
-		registerService(context, new AboutTaskFactory(version),
-				TaskFactory.class, aboutProps);
+		registerService(context,
+			taskFactory,
+			TaskFactory.class,
+			properties);
+	}
 
-		final Properties findPathsProps = new Properties();
-		findPathsProps.setProperty(IN_MENU_BAR, "false");
-		findPathsProps.setProperty(TITLE, "Zig Zag 2: Find paths from here");
+	private void registerFindPathsTaskFactory(BundleContext context) {
+		// Configure the service properties first.
+		final Properties properties = new Properties();
+		properties.setProperty(IN_MENU_BAR, "false");
+		properties.setProperty(TITLE, "Zig Zag 2: Find paths from here");
 
+		// Fetch dependent services.
 		VisualStyleFactory visualStyleFactory = getService(context,
-				VisualStyleFactory.class);
+			VisualStyleFactory.class);
 		VisualMappingManager visualMappingManager = getService(context,
-				VisualMappingManager.class);
+			VisualMappingManager.class);
+		
+		// Use a filter (mapping.type=discrete) to fetch a specific service
+		// based on its properties.
 		VisualMappingFunctionFactory discreteMappingFactory = getService(
-				context, VisualMappingFunctionFactory.class,
-				"(mapping.type=discrete)");
+			context, VisualMappingFunctionFactory.class,
+			"(mapping.type=discrete)");
 
-		FindPathsNodeViewTaskFactory taskFactory = new FindPathsNodeViewTaskFactory(
-				visualStyleFactory, discreteMappingFactory, visualMappingManager);
-		registerService(context, taskFactory, NodeViewTaskFactory.class,
-				findPathsProps);
+		// Create the service implementation.
+		FindPathsNodeViewTaskFactory taskFactory =
+			new FindPathsNodeViewTaskFactory(
+				visualStyleFactory,
+				discreteMappingFactory,
+				visualMappingManager);
+
+		registerService(context,
+			taskFactory,
+			NodeViewTaskFactory.class,
+			properties);
 	}
 }

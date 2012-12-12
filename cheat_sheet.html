@@ -44,16 +44,12 @@ pre {
 <li>Using a custom local repository (default is <code>~/.m2</code> on Mac/Linux, or <code>%USERPROFILE%\.m2</code> on Windows)
 <h3>Mac/Linux</h3>
 <pre>mvn -o -Dmaven.repo.local=/path/to/repository <b>&#0171;goal-1&#0187;</b> <em>[ <b>&#0171;goal-2&#0187;</b> ... ]</em></pre>
+e.g.:
+<pre>mvn -o -Dmaven.repo.local=../MavenRepo clean install</pre>
 <h3>Windows</h3>
 <pre>mvn -o -Dmaven.repo.local=path\to\repository <b>&#0171;goal-1&#0187;</b> <em>[ <b>&#0171;goal-2&#0187;</b> ... ]</em></pre>
-</li>
-
-<li>Build your project
-<pre>mvn install</pre>
-</li>
-
-<li>Clean, then build your project
-<pre>mvn clean install</pre>
+e.g.:
+<pre>mvn -o -Dmaven.repo.local=..\MavenRepo clean install</pre>
 </li>
 
 </ul>

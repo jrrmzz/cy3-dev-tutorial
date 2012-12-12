@@ -24,7 +24,7 @@ import org.cytoscape.work.Task;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskMonitor;
 
-class FindPathsNodeViewTaskFactory implements NodeViewTaskFactory {
+public class FindPathsNodeViewTaskFactory implements NodeViewTaskFactory {
 	private static final String REACHABLE = "reachable";
 
 	private static final String ZIGZAG_VISUAL_STYLE = "ZigZag";
@@ -51,141 +51,174 @@ class FindPathsNodeViewTaskFactory implements NodeViewTaskFactory {
 	public TaskIterator createTaskIterator(final View<CyNode> nodeView,
 		final CyNetworkView networkView) {
 
-		return new TaskIterator(createTask(nodeView, networkView));
+		Task task = new FindPathsTask(networkView, nodeView);
+		return new TaskIterator(task);
 	}
 
-	private Task createTask(final View<CyNode> nodeView,
-		final CyNetworkView networkView) {
+	// AbstractTask implements the cancel() method for us. All we need to do
+	// is poll AbstractTask.cancelled to see if we need to abort.
+	public class FindPathsTask extends AbstractTask {
+		private final CyNetworkView networkView;
+		private final View<CyNode> nodeView;
 
-		return new AbstractTask() {
-			@Override
-			public void run(TaskMonitor taskMonitor) throws Exception {
-				Set<CyEdge> edges = findPaths(nodeView, networkView);
-				taskMonitor.setProgress(0.33);
+		private FindPathsTask(CyNetworkView networkView,
+			View<CyNode> nodeView) {
+			this.networkView = networkView;
+			this.nodeView = nodeView;
+		}
 
+		@Override
+		public void run(TaskMonitor taskMonitor) throws Exception {
+			Set<CyEdge> edges = findPaths(nodeView, networkView);
+			taskMonitor.setProgress(0.25);
+
+			if (cancelled) {
+				return;
+			}
+
+			ensureReachableColumnsExist(networkView);
+			resetReachableColumn(networkView);
+			taskMonitor.setProgress(0.5);
+
+			updateReachableColumn(networkView, edges);
+			taskMonitor.setProgress(0.75);
+
+			VisualStyle style = getZigZagVisualStyle();
+
+			// Assign the ZigZag style to the network view.
+			visualMappingManager.setVisualStyle(style, networkView);
+
+			// Apply the VisualProperties computed by the VisualStyle to
+			// the network view.
+			style.apply(networkView);
+			taskMonitor.setProgress(1.0);
+
+			// Tell the network view it needs to update itself.
+			networkView.updateView();
+		}
+
+		private Set<CyEdge> findPaths(View<CyNode> nodeView,
+			CyNetworkView networkView) {
+			// Use breadth-first search algorithm to find all connected
+			// nodes and edges.
+			final Set<CyNode> nodes = new HashSet<CyNode>();
+			final Set<CyEdge> edges = new HashSet<CyEdge>();
+			final LinkedList<CyNode> pending = new LinkedList<CyNode>();
+
+			final CyNetwork network = networkView.getModel();
+			final CyNode startingNode = nodeView.getModel();
+			pending.push(startingNode);
+
+			while (!pending.isEmpty()) {
 				if (cancelled) {
-					return;
+					return Collections.emptySet();
 				}
 
-				createReachableColumn(networkView);
-				resetReachableColumn(networkView);
-				updateReachableColumn(networkView, edges);
-				taskMonitor.setProgress(0.67);
-
-				VisualStyle style = getVisualStyle(networkView);
-				style.apply(networkView);
-				taskMonitor.setProgress(1.0);
-
-				networkView.updateView();
-			}
-
-			private Set<CyEdge> findPaths(View<CyNode> nodeView,
-				CyNetworkView networkView) {
-				// Use breadth-first search algorithm to find all connected
-				// nodes and edges.
-				final Set<CyNode> nodes = new HashSet<CyNode>();
-				final Set<CyEdge> edges = new HashSet<CyEdge>();
-				final LinkedList<CyNode> pending = new LinkedList<CyNode>();
-
-				final CyNetwork network = networkView.getModel();
-				final CyNode startingNode = nodeView.getModel();
-				pending.push(startingNode);
-
-				while (!pending.isEmpty()) {
-					if (cancelled) {
-						return Collections.emptySet();
-					}
-
-					final CyNode node = pending.pop();
-					if (nodes.contains(node)) {
-						continue;
-					}
-
-					pending.addAll(network.getNeighborList(node,
-						CyEdge.Type.OUTGOING));
-					edges.addAll(network.getAdjacentEdgeList(node,
-						CyEdge.Type.OUTGOING));
-					nodes.add(node);
+				final CyNode node = pending.pop();
+				if (nodes.contains(node)) {
+					continue;
 				}
-				return edges;
+
+				pending.addAll(network.getNeighborList(node,
+					CyEdge.Type.OUTGOING));
+				edges.addAll(network.getAdjacentEdgeList(node,
+					CyEdge.Type.OUTGOING));
+				nodes.add(node);
 			}
-		};
-	}
-
-	private void createReachableColumn(CyNetworkView networkView) {
-		CyNetwork network = networkView.getModel();
-		createReachableColumn(network.getDefaultNodeTable());
-		createReachableColumn(network.getDefaultEdgeTable());
-	}
-
-	private void createReachableColumn(CyTable table) {
-		if (table.getColumn(REACHABLE) != null) {
-			return;
+			return edges;
 		}
 
-		boolean isImmutable = false;
-		table.createColumn(REACHABLE, Boolean.class, isImmutable);
-	}
+		private void ensureReachableColumnsExist(CyNetworkView networkView) {
+			CyNetwork network = networkView.getModel();
 
-	private void resetReachableColumn(CyNetworkView networkView) {
-		CyNetwork network = networkView.getModel();
-		for (CyNode node : network.getNodeList()) {
-			CyRow row = network.getRow(node);
-			row.set(REACHABLE, false);
+			// Ensure the column REACHABLE exists in the node table.
+			ensureReachableColumnExists(network.getDefaultNodeTable());
+
+			// ...as well as the edge table.
+			ensureReachableColumnExists(network.getDefaultEdgeTable());
 		}
 
-		for (CyEdge edge : network.getEdgeList()) {
-			CyRow row = network.getRow(edge);
-			row.set(REACHABLE, false);
+		private void ensureReachableColumnExists(CyTable table) {
+			if (table.getColumn(REACHABLE) != null) {
+				// The column REACHABLE already exists in this table so we
+				// can return early.
+				return;
+			}
+
+			boolean isImmutable = false;
+			table.createColumn(REACHABLE, Boolean.class, isImmutable);
 		}
-	}
 
-	private void updateReachableColumn(CyNetworkView networkView,
-		Set<CyEdge> edges) {
+		private void resetReachableColumn(CyNetworkView networkView) {
+			// Set the REACHABLE column in all node table rows to false.
+			CyNetwork network = networkView.getModel();
+			for (CyNode node : network.getNodeList()) {
+				CyRow row = network.getRow(node);
+				row.set(REACHABLE, false);
+			}
 
-		CyNetwork network = networkView.getModel();
-		for (CyEdge edge : edges) {
-			network.getRow(edge).set(REACHABLE, true);
-			network.getRow(edge.getSource()).set(REACHABLE, true);
-			network.getRow(edge.getTarget()).set(REACHABLE, true);
+			// Set the REACHABLE column in all edge table rows to false.
+			for (CyEdge edge : network.getEdgeList()) {
+				CyRow row = network.getRow(edge);
+				row.set(REACHABLE, false);
+			}
 		}
-	}
 
-	private VisualStyle getVisualStyle(CyNetworkView networkView) {
-		// If we already created the ZigZag style, don't create it again.
-		VisualStyle style = getVisualStyleByTitle(ZIGZAG_VISUAL_STYLE);
-		if (style != null) {
+		private void updateReachableColumn(CyNetworkView networkView,
+			Set<CyEdge> edges) {
+
+			// Set the REACHABLE column of the rows for the given edges
+			// (and their associated nodes) to true.
+			CyNetwork network = networkView.getModel();
+			for (CyEdge edge : edges) {
+				network.getRow(edge).set(REACHABLE, true);
+				network.getRow(edge.getSource()).set(REACHABLE, true);
+				network.getRow(edge.getTarget()).set(REACHABLE, true);
+			}
+		}
+
+		private VisualStyle getZigZagVisualStyle() {
+			// If we already created the ZigZag style, don't create it again.
+			VisualStyle style = getVisualStyleByTitle(ZIGZAG_VISUAL_STYLE);
+			if (style != null) {
+				return style;
+			}
+
+			style = visualStyleFactory.createVisualStyle(ZIGZAG_VISUAL_STYLE);
+
+			// Create a mapping for edge table column, REACHABLE, and
+			// the EDGE_WIDTH visual property. We need to cast to
+			// DiscreteMapping to set the mapping values.
+			DiscreteMapping<Boolean, Double> edgeMapping =
+				(DiscreteMapping<Boolean, Double>) discreteMappingFactory
+					.createVisualMappingFunction(REACHABLE, Boolean.class,
+						BasicVisualLexicon.EDGE_WIDTH);
+			edgeMapping.putMapValue(true, 9.0);
+			style.addVisualMappingFunction(edgeMapping);
+
+			// Create a mapping for node table column, REACHABLE, and
+			// the NODE_BORDER_WIDTH visual property. We need to cast to
+			// DiscreteMapping to set the mapping values.
+			DiscreteMapping<Boolean, Double> nodeMapping =
+				(DiscreteMapping<Boolean, Double>) discreteMappingFactory
+					.createVisualMappingFunction(REACHABLE, Boolean.class,
+						BasicVisualLexicon.NODE_BORDER_WIDTH);
+			nodeMapping.putMapValue(true, 9.0);
+			style.addVisualMappingFunction(nodeMapping);
+
+			// Register the new VisualStyle with the VisualMappingManager.
+			visualMappingManager.addVisualStyle(style);
+
 			return style;
 		}
 
-		style = visualStyleFactory.createVisualStyle(ZIGZAG_VISUAL_STYLE);
-
-		DiscreteMapping<Boolean, Double> edgeMapping =
-			(DiscreteMapping<Boolean, Double>) discreteMappingFactory
-				.createVisualMappingFunction(REACHABLE, Boolean.class,
-					BasicVisualLexicon.EDGE_WIDTH);
-		edgeMapping.putMapValue(true, 9.0);
-		style.addVisualMappingFunction(edgeMapping);
-
-		DiscreteMapping<Boolean, Double> nodeMapping =
-			(DiscreteMapping<Boolean, Double>) discreteMappingFactory
-				.createVisualMappingFunction(REACHABLE, Boolean.class,
-					BasicVisualLexicon.NODE_BORDER_WIDTH);
-		nodeMapping.putMapValue(true, 9.0);
-		style.addVisualMappingFunction(nodeMapping);
-
-		visualMappingManager.addVisualStyle(style);
-		visualMappingManager.setVisualStyle(style, networkView);
-
-		return style;
-	}
-
-	private VisualStyle getVisualStyleByTitle(String title) {
-		for (VisualStyle style : visualMappingManager.getAllVisualStyles()) {
-			if (style.getTitle().equals(title)) {
-				return style;
+		private VisualStyle getVisualStyleByTitle(String title) {
+			for (VisualStyle style : visualMappingManager.getAllVisualStyles()) {
+				if (style.getTitle().equals(title)) {
+					return style;
+				}
 			}
+			return null;
 		}
-		return null;
 	}
 }
