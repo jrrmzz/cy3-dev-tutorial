@@ -2,6 +2,10 @@
 <head>
 <title>Cytoscape 3 Developer Tutorial Cheat Sheet</title>
 <style>
+pre, code {
+    font-family: Menlo;
+}
+
 pre {
     border: 2px solid #d0d0d0;
     margin-top: 0;
@@ -13,7 +17,6 @@ pre {
 <body>
 <h1>Cytoscape 3 Developer Tutorial Cheat Sheet</h1>
 <h2>Maven</h2>
-<h3>If you have a working internet connection:</h3>
 <ul>
 
 <li>General usage
@@ -32,24 +35,17 @@ pre {
 <pre>mvn clean install</pre>
 </li>
 
-</ul>
-
-<h3>If you are working offline:</h3>
-<ul>
-
-<li>General usage
-<pre>mvn -o <b>&#0171;goal-1&#0187;</b> <em>[ <b>&#0171;goal-2&#0187;</b> ... ]</em></pre>
-</li>
-
-<li>Using a custom local repository (default is <code>~/.m2</code> on Mac/Linux, or <code>%USERPROFILE%\.m2</code> on Windows)
+<li>
+<p>Note: If you are working offline and need to compile/run the starter code, you'll need to copy the provided MavenRepo directory to your home directory.
 <h3>Mac/Linux</h3>
-<pre>mvn -o -Dmaven.repo.local=/path/to/repository <b>&#0171;goal-1&#0187;</b> <em>[ <b>&#0171;goal-2&#0187;</b> ... ]</em></pre>
-e.g.:
-<pre>mvn -o -Dmaven.repo.local=../MavenRepo clean install</pre>
+<pre>mkdir ~/.m2
+cp -r StarterCode/MavenRepo ~/.m2/repository</pre>
 <h3>Windows</h3>
-<pre>mvn -o -Dmaven.repo.local=path\to\repository <b>&#0171;goal-1&#0187;</b> <em>[ <b>&#0171;goal-2&#0187;</b> ... ]</em></pre>
-e.g.:
-<pre>mvn -o -Dmaven.repo.local=..\MavenRepo clean install</pre>
+<ol>
+    <li>Create a folder called <code>.m2</code> in your home folder (i.e. the one that contains your <code>Desktop</code> folder.</li>
+    <li>Copy the folder <code>StarterCode\MavenRepo</code> to <code>.m2</code>.</li>
+    <li>Rename the folder <code>.m2\MavenRepo</code> to <code>.m2\repository</code>.</li>
+</ol>
 </li>
 
 </ul>
