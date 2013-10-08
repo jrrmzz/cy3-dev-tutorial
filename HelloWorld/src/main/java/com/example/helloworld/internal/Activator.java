@@ -22,12 +22,14 @@ public class Activator implements BundleActivator {
 		// the log messages is accessible through the menu Help ->
 		// Developer's Log Console...
 		Logger logger = LoggerFactory.getLogger(Activator.class);
-		logger.info("Hello, world!");
+		logger.warn("Hello, world!");
+		// This is a test
 	}
 
 	@Override
 	public void stop(BundleContext context) throws Exception {
 		Logger logger = LoggerFactory.getLogger(Activator.class);
-		logger.info("Goodbye!");
+		logger.warn("Goodbye!");
+		// This is another test
 	}
 }

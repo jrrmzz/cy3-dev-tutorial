@@ -41,7 +41,7 @@ public class HelloWorldTaskFactory implements TaskFactory {
 			taskMonitor.setStatusMessage("Saying hello on the console...");
 
 			Logger logger = LoggerFactory.getLogger(getClass());
-			logger.info("Hello, world!");
+			logger.warn("Hello, world!");
 
 			// The setProgress() method tells the TaskMonitor how close we
 			// are to task completion, where 1.0 means we're done. As before,
@@ -83,7 +83,7 @@ public class HelloWorldTaskFactory implements TaskFactory {
 			String greeting = greetings.getSelectedValue();
 
 			Logger logger = LoggerFactory.getLogger(getClass());
-			logger.info(String.format("%s, %s!", greeting, name));
+			logger.warn(String.format("%s, %s!", greeting, name));
 
 			taskMonitor.setProgress(1.0);
 		}
