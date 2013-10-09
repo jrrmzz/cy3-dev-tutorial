@@ -1,5 +1,7 @@
 package com.example.helloworldservice.internal;
 
+import java.io.File;
+
 import org.cytoscape.work.Task;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskIterator;
@@ -22,10 +24,12 @@ public class HelloWorldTaskFactory implements TaskFactory {
 
 	@Override
 	public TaskIterator createTaskIterator() {
-		// Our factory creates a sequence of two tasks: HelloWorldTask,
-		// and TunableHelloWorldTask.
-		return new TaskIterator(new HelloWorldTask(),
-			new TunableHelloWorldTask());
+		// Our factory creates a sequence of three tasks.
+		return new TaskIterator(
+			new HelloWorldTask(),
+			new TunableHelloWorldTask(),
+			new TunableGalleryTask()
+		);
 	}
 
 	/**
@@ -41,7 +45,7 @@ public class HelloWorldTaskFactory implements TaskFactory {
 			taskMonitor.setStatusMessage("Saying hello on the console...");
 
 			Logger logger = LoggerFactory.getLogger(getClass());
-			logger.warn("Hello, world!");
+			logger.info("Hello, world!");
 
 			// The setProgress() method tells the TaskMonitor how close we
 			// are to task completion, where 1.0 means we're done. As before,
@@ -78,16 +82,56 @@ public class HelloWorldTaskFactory implements TaskFactory {
 
 		@Override
 		public void run(TaskMonitor taskMonitor) throws Exception {
+			taskMonitor.setTitle("Hello World Task");
 			taskMonitor.setStatusMessage("Saying hello on the console...");
 
 			String greeting = greetings.getSelectedValue();
-
+			String message = String.format("%s, %s!", greeting, name);
+			
 			Logger logger = LoggerFactory.getLogger(getClass());
-			logger.warn(String.format("%s, %s!", greeting, name));
-
+			logger.warn(message);
+			taskMonitor.setProgress(0.5);
+			
+			// Wait for 2000 ms just so we can see the
+			// status message
+			Thread.sleep(2000);
+			taskMonitor.setStatusMessage(message);
 			taskMonitor.setProgress(1.0);
 		}
 
+		@Override
+		public void cancel() {
+		}
+	}
+	
+	/**
+	 * Another parameterized Task implementation demonstrating other types
+	 * of Tunable parameters.
+	 */
+	public static class TunableGalleryTask implements Task {
+		@Tunable(description = "File to load",
+			     params = "fileCategory=network;input=true")
+		public File fileToLoad;
+		
+		@Tunable(description = "File to save",
+			     params = "fileCategory=table;input=false")
+		public File fileToSave;
+		
+		@Tunable(description = "Disable bugs")
+		public boolean disableBugs = true;
+		
+		@Override
+		public void run(TaskMonitor taskMonitor) throws Exception {
+			taskMonitor.setStatusMessage(String.format("Loading %s...",
+				                                       fileToLoad.getPath()));
+			
+			taskMonitor.setStatusMessage(String.format("Saving %s...",
+				                                       fileToSave.getPath()));
+			
+			taskMonitor.setStatusMessage(String.format("Bugs %s",
+				                                       disableBugs ? "enabled" : "disabled"));
+		}
+		
 		@Override
 		public void cancel() {
 		}
